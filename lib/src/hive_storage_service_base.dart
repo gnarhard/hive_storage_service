@@ -1,13 +1,13 @@
 import 'package:hive_flutter/hive_flutter.dart';
 
 /// Controls for the management of cache.
-class StorageService {
+class HiveStorageService {
   /// A registry of all the available boxes (aka tables).
   List<String> cacheKeys = [];
 
   final Function adapterRegistrationCallback;
 
-  StorageService({required this.adapterRegistrationCallback});
+  HiveStorageService({required this.adapterRegistrationCallback});
 
   Future<void> init() async {
     await Hive.initFlutter();
