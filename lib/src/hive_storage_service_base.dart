@@ -14,13 +14,11 @@ class HiveStorageService {
   }
 
   /// Get a value from the cache.
-  @override
   Future<T?> get<T>(String key) async {
     return await Hive.openBox(key) as T?;
   }
 
   /// Create or update a cache entry.
-  @override
   Future<void> set(String key, dynamic value) async {
     final box = await Hive.openBox(key);
     box.put(key, value);
