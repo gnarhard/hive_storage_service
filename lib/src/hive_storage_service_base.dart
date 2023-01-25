@@ -17,7 +17,6 @@ class HiveStorageService {
   Future<T?> get<T>(String key, {T? defaultValue}) async {
     final box = await Hive.openBox(key);
     final data = await box.get(key, defaultValue: defaultValue) as T?;
-    await box.close();
     return data;
   }
 
@@ -25,14 +24,12 @@ class HiveStorageService {
   Future<void> set(String key, dynamic value) async {
     final box = await Hive.openBox(key);
     box.put(key, value);
-    await box.close();
   }
 
   /// Delete all items stored under the cache key.
   Future<void> destroy(String key) async {
     final box = await Hive.openBox(key);
     await box.delete(key);
-    await box.close();
   }
 
   /// Delete all data from the cache.
@@ -43,6 +40,7 @@ class HiveStorageService {
     }
     await Future.wait(futures);
     Hive.deleteFromDisk();
+    await dispose();
   }
 
   /// Close all open Hive boxes.
