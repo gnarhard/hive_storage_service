@@ -1,27 +1,21 @@
+import 'dart:io' show Directory;
+
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 
 class HiveStorageService {
-  /// A registry of all the available boxes (aka tables).
-  List<String> cacheKeys = [];
-
   final Function adapterRegistrationCallback;
+  static const String subDirectory = 'hive';
 
   HiveStorageService({required this.adapterRegistrationCallback});
 
   Future<void> init() async {
-    await Hive.initFlutter();
+    await Hive.initFlutter(subDirectory);
     adapterRegistrationCallback();
-  }
-
-  void addCacheKey(String key) {
-    if (!cacheKeys.contains(key)) {
-      cacheKeys.add(key);
-    }
   }
 
   /// Get a value from the cache.
   Future<T?> get<T>(String key, {T? defaultValue}) async {
-    addCacheKey(key);
     final box = await Hive.openBox(key);
     final data = await box.get(key, defaultValue: defaultValue) as T?;
     return data;
@@ -29,7 +23,6 @@ class HiveStorageService {
 
   /// Create or update a cache entry.
   Future<void> set(String key, dynamic value) async {
-    addCacheKey(key);
     final box = await Hive.openBox(key);
     await box.compact();
     box.put(key, value);
@@ -39,27 +32,12 @@ class HiveStorageService {
   Future<void> destroy(String key) async {
     final box = await Hive.openBox(key);
     await box.delete(key);
-    cacheKeys.removeWhere((element) => element == key);
   }
 
   /// Delete all data from the cache.
   Future wipe() async {
-    var futures = <Future>[];
-    for (String cacheKey in cacheKeys) {
-      futures.add(Hive.openBox(cacheKey));
-    }
-    await Future.wait(futures);
-    Hive.deleteFromDisk();
-    await dispose();
-    cacheKeys = [];
-  }
-
-  /// Close all open Hive boxes.
-  Future dispose() async {
-    var futures = <Future>[];
-    for (String cacheKey in cacheKeys) {
-      futures.add(Hive.box(cacheKey).close());
-    }
-    await Future.wait(futures);
+    var appDir = await getApplicationDocumentsDirectory();
+    var hiveDb = Directory('${appDir.path}/$subDirectory');
+    hiveDb.delete(recursive: true);
   }
 }
