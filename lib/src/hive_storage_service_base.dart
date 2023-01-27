@@ -31,6 +31,7 @@ class HiveStorageService {
   Future<void> set(String key, dynamic value) async {
     addCacheKey(key);
     final box = await Hive.openBox(key);
+    await box.compact();
     box.put(key, value);
   }
 
