@@ -38,6 +38,8 @@ class HiveStorageService {
   Future wipe() async {
     var appDir = await getApplicationDocumentsDirectory();
     var hiveDb = Directory('${appDir.path}/$subDirectory');
-    hiveDb.delete(recursive: true);
+    if (await hiveDb.exists()) {
+      hiveDb.delete(recursive: true);
+    }
   }
 }
