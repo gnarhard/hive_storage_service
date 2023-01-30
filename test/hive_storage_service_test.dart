@@ -1,9 +1,9 @@
 import 'package:hive_storage_service/hive_storage_service.dart';
-import 'package:hive_storage_service/src/hive_storage_service_base.mocks.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 import 'package:test/test.dart';
 
+import 'hive_storage_service_test.mocks.dart';
 import 'mock_hive_model.dart';
 
 @GenerateNiceMocks([MockSpec<HiveStorageService>()])
@@ -18,11 +18,6 @@ void main() {
     test("Can initialize correctly.", () async {
       when(storageService.init()).thenAnswer((_) => Future<void>.value());
       expect(storageService, isNotNull);
-    });
-
-    test("Can set cache key.", () {
-      storageService.cacheKeys.add(cacheKey);
-      verify(storageService.cacheKeys);
     });
 
     test("Can set and get data.", () async {

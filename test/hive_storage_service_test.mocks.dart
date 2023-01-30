@@ -3,8 +3,9 @@
 // Do not manually edit this file.
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'dart:async' as _i3;
+import 'dart:async' as _i4;
 
+import 'package:hive_flutter/hive_flutter.dart' as _i3;
 import 'package:hive_storage_service/src/hive_storage_service_base.dart' as _i2;
 import 'package:mockito/mockito.dart' as _i1;
 
@@ -25,36 +26,36 @@ import 'package:mockito/mockito.dart' as _i1;
 class MockHiveStorageService extends _i1.Mock
     implements _i2.HiveStorageService {
   @override
-  List<String> get cacheKeys => (super.noSuchMethod(
-        Invocation.getter(#cacheKeys),
-        returnValue: <String>[],
-        returnValueForMissingStub: <String>[],
-      ) as List<String>);
-  @override
-  set cacheKeys(List<String>? _cacheKeys) => super.noSuchMethod(
-        Invocation.setter(
-          #cacheKeys,
-          _cacheKeys,
-        ),
-        returnValueForMissingStub: null,
-      );
-  @override
   Function get adapterRegistrationCallback => (super.noSuchMethod(
         Invocation.getter(#adapterRegistrationCallback),
         returnValue: () {},
         returnValueForMissingStub: () {},
       ) as Function);
   @override
-  _i3.Future<void> init() => (super.noSuchMethod(
+  _i3.CompactionStrategy get compactionStrategy => (super.noSuchMethod(
+        Invocation.getter(#compactionStrategy),
+        returnValue: (
+          int entries,
+          int deletedEntries,
+        ) =>
+            false,
+        returnValueForMissingStub: (
+          int entries,
+          int deletedEntries,
+        ) =>
+            false,
+      ) as _i3.CompactionStrategy);
+  @override
+  _i4.Future<void> init() => (super.noSuchMethod(
         Invocation.method(
           #init,
           [],
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
   @override
-  _i3.Future<T?> get<T>(
+  _i4.Future<T?> get<T>(
     String? key, {
     T? defaultValue,
   }) =>
@@ -64,11 +65,11 @@ class MockHiveStorageService extends _i1.Mock
           [key],
           {#defaultValue: defaultValue},
         ),
-        returnValue: _i3.Future<T?>.value(),
-        returnValueForMissingStub: _i3.Future<T?>.value(),
-      ) as _i3.Future<T?>);
+        returnValue: _i4.Future<T?>.value(),
+        returnValueForMissingStub: _i4.Future<T?>.value(),
+      ) as _i4.Future<T?>);
   @override
-  _i3.Future<void> set(
+  _i4.Future<void> set(
     String? key,
     dynamic value,
   ) =>
@@ -80,34 +81,25 @@ class MockHiveStorageService extends _i1.Mock
             value,
           ],
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
   @override
-  _i3.Future<void> destroy(String? key) => (super.noSuchMethod(
+  _i4.Future<void> destroy(String? key) => (super.noSuchMethod(
         Invocation.method(
           #destroy,
           [key],
         ),
-        returnValue: _i3.Future<void>.value(),
-        returnValueForMissingStub: _i3.Future<void>.value(),
-      ) as _i3.Future<void>);
+        returnValue: _i4.Future<void>.value(),
+        returnValueForMissingStub: _i4.Future<void>.value(),
+      ) as _i4.Future<void>);
   @override
-  _i3.Future<dynamic> wipe() => (super.noSuchMethod(
+  _i4.Future<dynamic> wipe() => (super.noSuchMethod(
         Invocation.method(
           #wipe,
           [],
         ),
-        returnValue: _i3.Future<dynamic>.value(),
-        returnValueForMissingStub: _i3.Future<dynamic>.value(),
-      ) as _i3.Future<dynamic>);
-  @override
-  _i3.Future<dynamic> dispose() => (super.noSuchMethod(
-        Invocation.method(
-          #dispose,
-          [],
-        ),
-        returnValue: _i3.Future<dynamic>.value(),
-        returnValueForMissingStub: _i3.Future<dynamic>.value(),
-      ) as _i3.Future<dynamic>);
+        returnValue: _i4.Future<dynamic>.value(),
+        returnValueForMissingStub: _i4.Future<dynamic>.value(),
+      ) as _i4.Future<dynamic>);
 }

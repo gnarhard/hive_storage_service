@@ -1,6 +1,7 @@
 import 'dart:io' show Directory;
 
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
 
 class HiveStorageService {
@@ -43,6 +44,17 @@ class HiveStorageService {
     var hiveDb = Directory('${appDir.path}/$subDirectory');
     if (await hiveDb.exists()) {
       hiveDb.delete(recursive: true);
+    }
+  }
+
+  nukeOldVersionDBs() async {
+    final packageInfo = await PackageInfo.fromPlatform();
+    final currentVersion = '${packageInfo.version}+${packageInfo.buildNumber}';
+    final storedVersion = await get<String>('appVersion');
+
+    if (storedVersion != currentVersion) {
+      await wipe();
+      await set('appVersion', currentVersion);
     }
   }
 }
