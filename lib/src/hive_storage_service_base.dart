@@ -14,6 +14,7 @@ class HiveStorageService {
   final secureStorage = FlutterSecureStorage();
 
   late final Uint8List encryptionKey;
+  late final Directory hiveDbDirectory;
 
   HiveStorageService(
       {this.hiveSubDirectoryName = 'hive',
@@ -22,6 +23,9 @@ class HiveStorageService {
 
   Future<void> init() async {
     await Hive.initFlutter(hiveSubDirectoryName);
+    hiveDbDirectory = Directory(
+        '${(await getApplicationDocumentsDirectory()).path}/$hiveSubDirectoryName');
+    adapterRegistrationCallback();
 
     // if key not exists return null
     final storedEncryptionKey = await secureStorage.read(key: 'key');
@@ -34,48 +38,50 @@ class HiveStorageService {
     }
     final key = await secureStorage.read(key: 'key');
     encryptionKey = base64Url.decode(key!);
-
-    adapterRegistrationCallback();
+    await openBox('appVersion', false);
   }
 
-  Future<Directory> get hiveDb async => Directory(
-      '${(await getApplicationDocumentsDirectory()).path}/$hiveSubDirectoryName');
+  Future<void> openBox<T>(String key, bool encrypt) async {
+    if (encrypt) {
+      await Hive.openBox<T>(
+        key,
+        compactionStrategy: compactionStrategy,
+        encryptionCipher: HiveAesCipher(encryptionKey),
+      );
+      return;
+    }
 
-  /// Get a value from the cache.
-  Future<T?> get<T>(String key, {T? defaultValue}) async {
-    final box = await Hive.openBox(
+    await Hive.openBox<T>(
       key,
       compactionStrategy: compactionStrategy,
-      encryptionCipher: HiveAesCipher(encryptionKey),
     );
-    final data = await box.get(key, defaultValue: defaultValue) as T?;
+  }
+
+  /// Get a value from the cache.
+  T? get<T>(String key, {T? defaultValue}) {
+    final box = Hive.box(
+      key,
+    );
+    final data = box.get(key, defaultValue: defaultValue) as T?;
     return data;
   }
 
   /// Create or update a cache entry.
-  Future<void> set(String key, dynamic value) async {
-    final box = await Hive.openBox(
-      key,
-      compactionStrategy: compactionStrategy,
-      encryptionCipher: HiveAesCipher(encryptionKey),
-    );
+  void set(String key, dynamic value) {
+    final box = Hive.box(key);
     box.put(key, value);
   }
 
   /// Delete all items stored under the cache key.
-  Future<void> destroy(String key) async {
-    final box = await Hive.openBox(
-      key,
-      encryptionCipher: HiveAesCipher(encryptionKey),
-    );
-    await box.delete(key);
+  void destroy(String key) {
+    final box = Hive.box(key);
+    box.delete(key);
   }
 
   /// Delete all data from the cache.
   Future wipe() async {
-    final db = await hiveDb;
-    if (await db.exists()) {
-      db.delete(recursive: true);
+    if (await hiveDbDirectory.exists()) {
+      hiveDbDirectory.delete(recursive: true);
     }
   }
 
@@ -85,11 +91,11 @@ class HiveStorageService {
         ? packageInfo.version
         : '${packageInfo.version}+${packageInfo.buildSignature}';
 
-    final storedVersion = await get<String>('appVersion');
+    final storedVersion = get<String>('appVersion');
 
     if (storedVersion != currentVersion) {
       await wipe();
-      await set('appVersion', currentVersion);
+      set('appVersion', currentVersion);
     }
   }
 }
