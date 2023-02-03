@@ -22,6 +22,7 @@ dev_dependencies:
       url: https://github.com/gnarhard/http_cache.git
       ref: main
   get_it: ^7.2.0
+  
 dependencies:
   hive_flutter: ^1.1.0
   hive: ^2.2.3
@@ -29,3 +30,4 @@ dependencies:
     sdk: flutter
   package_info_plus: ^3.0.2
   path_provider: ^2.0.12
+  flutter_secure_storage: ^7.0.1
