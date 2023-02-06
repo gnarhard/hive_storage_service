@@ -18,7 +18,6 @@ class MockHiveModelAdapter extends TypeAdapter<MockHiveModel> {
     };
     return MockHiveModel(
       name: fields[1] as String,
-      cachedMilliseconds: fields[2] as int,
       id: fields[0] as int,
     );
   }
@@ -26,13 +25,11 @@ class MockHiveModelAdapter extends TypeAdapter<MockHiveModel> {
   @override
   void write(BinaryWriter writer, MockHiveModel obj) {
     writer
-      ..writeByte(3)
+      ..writeByte(2)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
-      ..write(obj.name)
-      ..writeByte(2)
-      ..write(obj.cachedMilliseconds);
+      ..write(obj.name);
   }
 
   @override
@@ -53,7 +50,6 @@ class MockHiveModelAdapter extends TypeAdapter<MockHiveModel> {
 MockHiveModel _$MockHiveModelFromJson(Map<String, dynamic> json) =>
     MockHiveModel(
       name: json['name'] as String,
-      cachedMilliseconds: json['cachedMilliseconds'] as int? ?? 0,
       id: json['id'] as int,
     );
 
@@ -61,5 +57,4 @@ Map<String, dynamic> _$MockHiveModelToJson(MockHiveModel instance) =>
     <String, dynamic>{
       'id': instance.id,
       'name': instance.name,
-      'cachedMilliseconds': instance.cachedMilliseconds,
     };

@@ -79,13 +79,14 @@ class HiveStorageService {
   }
 
   /// Delete all data from the cache.
-  Future wipe() async {
+  Future<void> wipe() async {
     if (await hiveDbDirectory.exists()) {
       hiveDbDirectory.delete(recursive: true);
+      hiveDbDirectory.create(); // recreate the directory
     }
   }
 
-  nukeOldVersionDBs() async {
+  Future<void> nukeOldVersionDBs() async {
     final packageInfo = await PackageInfo.fromPlatform();
     final String currentVersion = packageInfo.buildSignature == ''
         ? packageInfo.version

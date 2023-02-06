@@ -7,13 +7,14 @@ import 'package:hive_storage_service/src/mock_hive_model.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
-import '../example/hive_storage_service_example.dart' as app;
+import 'package:hive_storage_service/src/empty_app.dart' as app;
 
 void main() {
   group('Hive Storage Service', () {
     IntegrationTestWidgetsFlutterBinding.ensureInitialized();
     late final service = GetIt.I<HiveStorageService>();
     bool registered = false;
+    const String storageKey = 'test';
 
     setUp(() async {
       if (!registered) {
@@ -28,67 +29,56 @@ void main() {
         await service.init();
         registered = true;
       }
+      await service.openBox(storageKey, true);
+      app.main();
     });
 
+    tearDown(() => service.destroy(storageKey));
+
     testWidgets("can set data", (tester) async {
-      app.main();
       await tester.pumpAndSettle();
-      final Finder setDataButton = find.byKey(const Key('set-data-button'));
+      service.set(storageKey, MockHiveModel.make());
 
-      await tester.tap(setDataButton);
-      await tester.pumpAndSettle();
+      final mockHiveModel = service.get<MockHiveModel>(storageKey);
 
-      final mockHiveModel = await service.get<MockHiveModel>('test');
-
-      expect(mockHiveModel!.name, 'test');
+      expect(mockHiveModel, isNotNull);
     });
 
     testWidgets("can wipe data", (tester) async {
-      app.main();
       await tester.pumpAndSettle();
-      final Finder wipeDataButton = find.byKey(const Key('wipe-data-button'));
-      final Finder setDataButton = find.byKey(const Key('set-data-button'));
+      await service.wipe();
 
-      await tester.tap(setDataButton);
-      await tester.pumpAndSettle();
-
-      await tester.tap(wipeDataButton);
-      await tester.pumpAndSettle();
-
-      final hiveDb = await service.hiveDb;
-      final bool dbExists = await hiveDb.exists();
+      final bool dbExists = await service.hiveDbDirectory.exists();
 
       expect(dbExists, false);
     });
 
     testWidgets("can nuke db after version change", (tester) async {
-      app.main();
       await tester.pumpAndSettle();
-
-      final hiveDb = await service.hiveDb;
 
       final packageInfo = await PackageInfo.fromPlatform();
       final String currentVersion = packageInfo.buildSignature == ''
           ? packageInfo.version
           : '${packageInfo.version}+${packageInfo.buildSignature}';
-      await service.set('appVersion', currentVersion);
-      final storedVersion = await service.get<String>('appVersion');
+          
+      service.set('appVersion', currentVersion);
+      final storedVersion = service.get<String>('appVersion');
 
       expect(storedVersion, currentVersion);
-      bool dbExists = await hiveDb.exists();
+      bool dbExists = await service.hiveDbDirectory.exists();
 
       // expect that new db directory was created
       expect(dbExists, true);
 
       await service.nukeOldVersionDBs();
-      dbExists = await hiveDb.exists();
+      dbExists = await service.hiveDbDirectory.exists();
 
       // expect that db still exists after versions match
       expect(dbExists, true);
 
-      await service.set('appVersion', '1.0.0+99');
+      service.set('appVersion', '1.0.0+99');
       await service.nukeOldVersionDBs();
-      dbExists = await hiveDb.exists();
+      dbExists = await service.hiveDbDirectory.exists();
 
       // expect that db was deleted after versions don't match
       expect(dbExists, false);

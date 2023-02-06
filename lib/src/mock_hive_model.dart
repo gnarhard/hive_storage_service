@@ -1,23 +1,22 @@
+import 'dart:math';
+
 import 'package:hive_flutter/adapters.dart';
 import 'package:http_cache/http_cache.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:faker/faker.dart';
 
 part 'mock_hive_model.g.dart';
 
 @HiveType(typeId: 0)
 @JsonSerializable()
-class MockHiveModel implements CacheItem {
+class MockHiveModel {
   @HiveField(0)
   final int id;
   @HiveField(1)
   String name;
-  @HiveField(2)
-  @override
-  int cachedMilliseconds;
 
   MockHiveModel({
     required this.name,
-    this.cachedMilliseconds = 0,
     required this.id,
   });
 
@@ -25,4 +24,10 @@ class MockHiveModel implements CacheItem {
 
   factory MockHiveModel.fromJson(Map<String, dynamic> json) =>
       _$MockHiveModelFromJson(json);
+
+  factory MockHiveModel.make() {
+    Faker faker = Faker();
+    Random random = Random();
+    return MockHiveModel(name: faker.animal.name(), id: random.nextInt(10));
+  }
 }

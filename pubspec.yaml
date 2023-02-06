@@ -22,6 +22,7 @@ dev_dependencies:
       url: https://github.com/gnarhard/http_cache.git
       ref: main
   get_it: ^7.2.0
+  faker: ^2.1.0
   
 dependencies:
   hive_flutter: ^1.1.0
