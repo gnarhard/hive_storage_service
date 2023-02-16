@@ -9,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 
 class HiveStorageService {
   final Function adapterRegistrationCallback;
-  final CompactionStrategy compactionStrategy;
+  final CompactionStrategy? compactionStrategy;
   final String hiveSubDirectoryName;
   final secureStorage = FlutterSecureStorage();
 
@@ -19,7 +19,7 @@ class HiveStorageService {
   HiveStorageService(
       {this.hiveSubDirectoryName = 'hive',
       required this.adapterRegistrationCallback,
-      required this.compactionStrategy});
+      this.compactionStrategy});
 
   Future<void> init() async {
     await Hive.initFlutter(hiveSubDirectoryName);
@@ -42,12 +42,18 @@ class HiveStorageService {
   }
 
   Future<void> openBox<T>(String key, bool encrypt) async {
-    await Hive.openBox<T>(
-      key,
-      compactionStrategy: compactionStrategy,
-      encryptionCipher: encrypt ? HiveAesCipher(encryptionKey) : null,
-      path: '${hiveDbDirectory.path}/$key',
-    );
+    if (compactionStrategy == null) {
+      await Hive.openBox<T>(
+        key,
+        encryptionCipher: encrypt ? HiveAesCipher(encryptionKey) : null,
+      );
+    } else {
+      await Hive.openBox<T>(
+        key,
+        compactionStrategy: compactionStrategy!,
+        encryptionCipher: encrypt ? HiveAesCipher(encryptionKey) : null,
+      );
+    }
   }
 
   /// Get a value from the cache.
