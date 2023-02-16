@@ -60,7 +60,7 @@ class HiveStorageService {
   T? get<T>(String key, {T? defaultValue}) {
     final box = Hive.box(key);
     final data = box.get(key, defaultValue: defaultValue);
-    return data;
+    return data as T;
   }
 
   /// Create or update a cache entry.
@@ -93,6 +93,7 @@ class HiveStorageService {
 
     if (storedVersion != currentVersion) {
       await wipe();
+      // todo: figure out why this doesn't work
       await openBox('appVersion', false);
       set('appVersion', currentVersion);
     }
