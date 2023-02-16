@@ -46,9 +46,11 @@ void main() {
 
     testWidgets("can wipe data", (tester) async {
       await tester.pumpAndSettle();
-      await service.wipe();
+      bool dbExists = await service.hiveDbDirectory.exists();
+      expect(dbExists, true);
 
-      final bool dbExists = await service.hiveDbDirectory.exists();
+      await service.wipe();
+      dbExists = await service.hiveDbDirectory.exists();
 
       expect(dbExists, false);
     });
@@ -60,7 +62,7 @@ void main() {
       final String currentVersion = packageInfo.buildSignature == ''
           ? packageInfo.version
           : '${packageInfo.version}+${packageInfo.buildSignature}';
-          
+
       service.set('appVersion', currentVersion);
       final storedVersion = service.get<String>('appVersion');
 
