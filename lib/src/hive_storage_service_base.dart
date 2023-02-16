@@ -93,6 +93,7 @@ class HiveStorageService {
 
     if (storedVersion != currentVersion) {
       await wipe();
+      await openBox('appVersion', false);
       set('appVersion', currentVersion);
     }
   }
