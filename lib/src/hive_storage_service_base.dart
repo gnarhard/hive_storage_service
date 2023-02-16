@@ -42,27 +42,17 @@ class HiveStorageService {
   }
 
   Future<void> openBox<T>(String key, bool encrypt) async {
-    if (encrypt) {
-      await Hive.openBox<T>(
-        key,
-        compactionStrategy: compactionStrategy,
-        encryptionCipher: HiveAesCipher(encryptionKey),
-      );
-      return;
-    }
-
     await Hive.openBox<T>(
       key,
       compactionStrategy: compactionStrategy,
+      encryptionCipher: encrypt ? HiveAesCipher(encryptionKey) : null,
     );
   }
 
   /// Get a value from the cache.
   T? get<T>(String key, {T? defaultValue}) {
-    final box = Hive.box(
-      key,
-    );
-    final data = box.get(key, defaultValue: defaultValue) as T?;
+    final box = Hive.box(key);
+    final data = box.get(key, defaultValue: defaultValue);
     return data;
   }
 
