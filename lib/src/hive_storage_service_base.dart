@@ -57,9 +57,9 @@ class HiveStorageService {
   }
 
   /// Get a value from the cache.
-  T? get<T>(String key, {T? defaultValue}) {
+  get<T>(String key, {T? defaultValue}) {
     final box = Hive.box(key);
-    final data = box.get(key, defaultValue: defaultValue) as T?;
+    final data = box.get(key, defaultValue: defaultValue);
     return data;
   }
 
