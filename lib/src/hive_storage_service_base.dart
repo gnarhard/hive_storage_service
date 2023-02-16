@@ -46,6 +46,7 @@ class HiveStorageService {
       key,
       compactionStrategy: compactionStrategy,
       encryptionCipher: encrypt ? HiveAesCipher(encryptionKey) : null,
+      path: '${hiveDbDirectory.path}/$key',
     );
   }
 
