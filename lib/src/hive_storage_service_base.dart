@@ -85,9 +85,9 @@ class HiveStorageService {
 
   Future<void> nukeOldVersionDBs() async {
     final packageInfo = await PackageInfo.fromPlatform();
-    final String currentVersion = packageInfo.buildSignature == ''
+    final String currentVersion = packageInfo.buildNumber == ''
         ? packageInfo.version
-        : '${packageInfo.version}+${packageInfo.buildSignature}';
+        : '${packageInfo.version}+${packageInfo.buildNumber}';
 
     final storedVersion = get<String>('appVersion');
 

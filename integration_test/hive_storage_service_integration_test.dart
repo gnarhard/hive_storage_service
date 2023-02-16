@@ -59,9 +59,9 @@ void main() {
       await tester.pumpAndSettle();
 
       final packageInfo = await PackageInfo.fromPlatform();
-      final String currentVersion = packageInfo.buildSignature == ''
+      final String currentVersion = packageInfo.buildNumber == ''
           ? packageInfo.version
-          : '${packageInfo.version}+${packageInfo.buildSignature}';
+          : '${packageInfo.version}+${packageInfo.buildNumber}';
 
       service.set('appVersion', currentVersion);
       final storedVersion = service.get<String>('appVersion');
