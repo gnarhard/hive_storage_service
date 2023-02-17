@@ -19,7 +19,7 @@ class HiveStorageService {
   /// Make this a different directory than hiveDbDirectory to save it from nuking.
   late final Directory appVersionDbPath;
 
-  Box appVersionBox;
+  late final Box appVersionBox;
 
   HiveStorageService(
       {this.hiveSubDirectoryName = 'hive',
