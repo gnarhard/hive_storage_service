@@ -15,8 +15,11 @@ class HiveStorageService {
 
   late final Uint8List encryptionKey;
   late final Directory hiveDbDirectory;
+
   /// Make this a different directory than hiveDbDirectory to save it from nuking.
   late final Directory appVersionDbPath;
+
+  Box appVersionBox;
 
   HiveStorageService(
       {this.hiveSubDirectoryName = 'hive',
@@ -42,7 +45,8 @@ class HiveStorageService {
     }
     final key = await secureStorage.read(key: 'key');
     encryptionKey = base64Url.decode(key!);
-    await Hive.openBox('appVersion', path: appVersionDbPath.path);
+    appVersionBox =
+        await Hive.openBox('appVersion', path: appVersionDbPath.path);
   }
 
   Future<void> openBox<T>(String key, bool encrypt) async {
@@ -93,12 +97,11 @@ class HiveStorageService {
         ? packageInfo.version
         : '${packageInfo.version}+${packageInfo.buildNumber}';
 
-    final storedVersion = get<String>('appVersion');
+    final storedVersion = await appVersionBox.get('appVersion');
 
     if (storedVersion != currentVersion) {
       await wipe();
-      final box = await Hive.openBox('appVersion', path: appVersionDbPath.path);
-      box.put('appVersion', currentVersion);
+      appVersionBox.put('appVersion', currentVersion);
     }
   }
 }
