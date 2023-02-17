@@ -15,6 +15,8 @@ class HiveStorageService {
 
   late final Uint8List encryptionKey;
   late final Directory hiveDbDirectory;
+  /// Make this a different directory than hiveDbDirectory to save it from nuking.
+  late final Directory appVersionDbPath;
 
   HiveStorageService(
       {this.hiveSubDirectoryName = 'hive',
@@ -25,6 +27,8 @@ class HiveStorageService {
     await Hive.initFlutter(hiveSubDirectoryName);
     hiveDbDirectory = Directory(
         '${(await getApplicationDocumentsDirectory()).path}/$hiveSubDirectoryName');
+    appVersionDbPath = await getApplicationDocumentsDirectory();
+
     adapterRegistrationCallback();
 
     // if key not exists return null
@@ -38,7 +42,7 @@ class HiveStorageService {
     }
     final key = await secureStorage.read(key: 'key');
     encryptionKey = base64Url.decode(key!);
-    await openBox('appVersion', false);
+    await Hive.openBox('appVersion', path: appVersionDbPath.path);
   }
 
   Future<void> openBox<T>(String key, bool encrypt) async {
@@ -93,9 +97,8 @@ class HiveStorageService {
 
     if (storedVersion != currentVersion) {
       await wipe();
-      // todo: figure out why this doesn't work
-      await openBox('appVersion', false);
-      set('appVersion', currentVersion);
+      final box = await Hive.openBox('appVersion', path: appVersionDbPath.path);
+      box.put('appVersion', currentVersion);
     }
   }
 }
