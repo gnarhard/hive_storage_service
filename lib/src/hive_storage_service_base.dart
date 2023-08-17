@@ -1,7 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -11,7 +12,9 @@ class HiveStorageService {
   final Function adapterRegistrationCallback;
   final CompactionStrategy? compactionStrategy;
   final String hiveSubDirectoryName;
-  final secureStorage = FlutterSecureStorage();
+  final secureStorage = FlutterSecureStorage(
+      // Other workaround for https://github.com/mogol/flutter_secure_storage/issues/43
+      aOptions: AndroidOptions(encryptedSharedPreferences: true));
 
   late final Uint8List encryptionKey;
   late final Directory hiveDbDirectory;
@@ -33,16 +36,26 @@ class HiveStorageService {
     adapterRegistrationCallback();
 
     // if key not exists return null
-    final storedEncryptionKey = await secureStorage.read(key: 'key');
+    String? storedEncryptionKey = await secureStorage.read(key: 'key');
     if (storedEncryptionKey == null) {
-      final key = Hive.generateSecureKey();
       await secureStorage.write(
-        key: 'key',
-        value: base64UrlEncode(key),
-      );
+          key: 'key', value: base64UrlEncode(Hive.generateSecureKey()));
+      storedEncryptionKey = await secureStorage.read(key: 'key');
     }
-    final key = await secureStorage.read(key: 'key');
-    encryptionKey = base64Url.decode(key!);
+
+    try {
+      encryptionKey = base64Url.decode(storedEncryptionKey!);
+    } on PlatformException catch (e) {
+      debugPrint("Error while decoding encryption key: $e");
+      // Workaround for https://github.com/mogol/flutter_secure_storage/issues/43
+      await secureStorage.deleteAll();
+
+      // recreate storage key
+      await secureStorage.write(
+          key: 'key', value: base64UrlEncode(Hive.generateSecureKey()));
+      storedEncryptionKey = await secureStorage.read(key: 'key');
+    }
+
     await Hive.openBox('appVersion', path: appVersionDbPath.path);
   }
 
