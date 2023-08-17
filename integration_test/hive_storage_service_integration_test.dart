@@ -38,11 +38,14 @@ void main() {
 
     testWidgets("can set data", (tester) async {
       await tester.pumpAndSettle();
-      service.set(storageKey, MockHiveModel.make());
+
+      final mockModel = MockHiveModel.make();
+      service.set(storageKey, mockModel);
 
       final mockHiveModel = service.get<MockHiveModel>(storageKey);
 
       expect(mockHiveModel, isNotNull);
+      expect(mockHiveModel == mockModel, true);
 
       service.destroy(storageKey);
     });
@@ -74,6 +77,7 @@ void main() {
           ? packageInfo.version
           : '${packageInfo.version}+${packageInfo.buildNumber}';
 
+      await service.openBox('appVersion', false);
       service.set('appVersion', currentVersion);
       final storedVersion = service.get<String>('appVersion');
 
@@ -86,6 +90,7 @@ void main() {
       // expect that db sizes exists after versions match
       expect(dbStat.size == newDbStat.size, true);
 
+      await service.openBox('appVersion', false);
       service.set('appVersion', '1.0.0+99');
       await service.nukeOldVersionDBs();
       newDbStat = await service.hiveDbDirectory.stat();
