@@ -19,8 +19,6 @@ class HiveStorageService {
   /// Make this a different directory than hiveDbDirectory to save it from nuking.
   late final Directory appVersionDbPath;
 
-  late final Box appVersionBox;
-
   HiveStorageService(
       {this.hiveSubDirectoryName = 'hive',
       required this.adapterRegistrationCallback,
@@ -45,8 +43,7 @@ class HiveStorageService {
     }
     final key = await secureStorage.read(key: 'key');
     encryptionKey = base64Url.decode(key!);
-    appVersionBox =
-        await Hive.openBox('appVersion', path: appVersionDbPath.path);
+    await Hive.openBox('appVersion', path: appVersionDbPath.path);
   }
 
   Future<void> openBox<T>(String key, bool encrypt) async {
@@ -84,10 +81,11 @@ class HiveStorageService {
   }
 
   /// Delete all data from the cache.
-  Future<void> wipe() async {
+  Future<void> truncate() async {
     if (await hiveDbDirectory.exists()) {
-      hiveDbDirectory.delete(recursive: true);
-      hiveDbDirectory.create(); // recreate the directory
+      await Hive.close();
+      await hiveDbDirectory.delete(recursive: true);
+      await hiveDbDirectory.create(); // recreate the directory
     }
   }
 
@@ -97,10 +95,16 @@ class HiveStorageService {
         ? packageInfo.version
         : '${packageInfo.version}+${packageInfo.buildNumber}';
 
+    final appVersionBox =
+        await Hive.openBox('appVersion', path: appVersionDbPath.path);
     final storedVersion = await appVersionBox.get('appVersion');
 
     if (storedVersion != currentVersion) {
-      await wipe();
+      await truncate();
+
+      final appVersionBox =
+          await Hive.openBox('appVersion', path: appVersionDbPath.path);
+
       appVersionBox.put('appVersion', currentVersion);
     }
   }

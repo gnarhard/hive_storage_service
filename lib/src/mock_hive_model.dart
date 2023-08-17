@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:hive_flutter/adapters.dart';
-import 'package:http_cache/http_cache.dart';
 import 'package:json_annotation/json_annotation.dart';
 import 'package:faker/faker.dart';
 
