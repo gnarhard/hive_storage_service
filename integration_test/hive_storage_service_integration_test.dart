@@ -1,4 +1,5 @@
-import 'package:flutter/widgets.dart' show Key;
+import 'dart:io';
+
 import 'package:get_it/get_it.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_storage_service/hive_storage_service.dart';
@@ -8,6 +9,8 @@ import 'package:integration_test/integration_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:hive_storage_service/src/empty_app.dart' as app;
+
+// NOTE: Tests passing as of 8.16.2023
 
 void main() {
   group('Hive Storage Service', () {
@@ -23,25 +26,28 @@ void main() {
                   adapterRegistrationCallback: () {
                     Hive.registerAdapter(MockHiveModelAdapter());
                   },
-                  compactionStrategy: (entries, deletedEntries) =>
-                      deletedEntries > 10,
                 ));
+
         await service.init();
         registered = true;
       }
+
       await service.openBox(storageKey, true);
       app.main();
     });
 
-    tearDown(() => service.destroy(storageKey));
-
     testWidgets("can set data", (tester) async {
       await tester.pumpAndSettle();
-      service.set(storageKey, MockHiveModel.make());
+
+      final mockModel = MockHiveModel.make();
+      service.set(storageKey, mockModel);
 
       final mockHiveModel = service.get<MockHiveModel>(storageKey);
 
       expect(mockHiveModel, isNotNull);
+      expect(mockHiveModel == mockModel, true);
+
+      service.destroy(storageKey);
     });
 
     testWidgets("can wipe data", (tester) async {
@@ -49,10 +55,18 @@ void main() {
       bool dbExists = await service.hiveDbDirectory.exists();
       expect(dbExists, true);
 
-      await service.wipe();
+      // store new data
+      await service.openBox('test_number', false);
+      service.set('test_number', 1);
+
+      await service.truncate();
       dbExists = await service.hiveDbDirectory.exists();
 
-      expect(dbExists, false);
+      // We are recreating the database in wipe
+      expect(dbExists, true);
+
+      final boxExists = await Hive.boxExists('test_number');
+      expect(boxExists, false);
     });
 
     testWidgets("can nuke db after version change", (tester) async {
@@ -63,27 +77,26 @@ void main() {
           ? packageInfo.version
           : '${packageInfo.version}+${packageInfo.buildNumber}';
 
+      await service.openBox('appVersion', false);
       service.set('appVersion', currentVersion);
       final storedVersion = service.get<String>('appVersion');
 
       expect(storedVersion, currentVersion);
-      bool dbExists = await service.hiveDbDirectory.exists();
 
-      // expect that new db directory was created
-      expect(dbExists, true);
-
+      FileStat dbStat = await service.hiveDbDirectory.stat();
       await service.nukeOldVersionDBs();
-      dbExists = await service.hiveDbDirectory.exists();
+      FileStat newDbStat = await service.hiveDbDirectory.stat();
 
-      // expect that db still exists after versions match
-      expect(dbExists, true);
+      // expect that db sizes exists after versions match
+      expect(dbStat.size == newDbStat.size, true);
 
+      await service.openBox('appVersion', false);
       service.set('appVersion', '1.0.0+99');
       await service.nukeOldVersionDBs();
-      dbExists = await service.hiveDbDirectory.exists();
+      newDbStat = await service.hiveDbDirectory.stat();
 
       // expect that db was deleted after versions don't match
-      expect(dbExists, false);
+      expect(dbStat.size > newDbStat.size, true);
     });
   });
 }
