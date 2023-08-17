@@ -89,14 +89,17 @@ void main() {
 
       // expect that db sizes exists after versions match
       expect(dbStat.size == newDbStat.size, true);
+      bool boxExists = await Hive.boxExists('appVersion');
+      expect(boxExists, true);
 
       await service.openBox('appVersion', false);
       service.set('appVersion', '1.0.0+99');
       await service.nukeOldVersionDBs();
       newDbStat = await service.hiveDbDirectory.stat();
 
-      // expect that db was deleted after versions don't match
-      expect(dbStat.size > newDbStat.size, true);
+      // expect that db was truncated after versions don't match
+      boxExists = await Hive.boxExists('appVersion');
+      expect(boxExists, false);
     });
   });
 }
