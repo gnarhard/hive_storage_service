@@ -10,7 +10,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:hive_storage_service/src/empty_app.dart' as app;
 
-// NOTE: Tests passing as of 8.16.2023
+// NOTE: Tests passing as of 9.2.2023
 
 void main() {
   group('Hive Storage Service', () {
