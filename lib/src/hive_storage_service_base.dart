@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -12,9 +10,6 @@ class HiveStorageService {
   final Function adapterRegistrationCallback;
   final CompactionStrategy? compactionStrategy;
   final String hiveSubDirectoryName;
-  final secureStorage = FlutterSecureStorage(
-      // Other workaround for https://github.com/mogol/flutter_secure_storage/issues/43
-      aOptions: AndroidOptions(encryptedSharedPreferences: true));
 
   late final Uint8List encryptionKey;
   late final Directory hiveDbDirectory;
@@ -35,42 +30,14 @@ class HiveStorageService {
 
     adapterRegistrationCallback();
 
-    // if key not exists return null
-    String? storedEncryptionKey = await secureStorage.read(key: 'key');
-    if (storedEncryptionKey == null) {
-      await secureStorage.write(
-          key: 'key', value: base64UrlEncode(Hive.generateSecureKey()));
-      storedEncryptionKey = await secureStorage.read(key: 'key');
-    }
-
-    try {
-      encryptionKey = base64Url.decode(storedEncryptionKey!);
-    } on PlatformException catch (e) {
-      debugPrint("Error while decoding encryption key: $e");
-      // Workaround for https://github.com/mogol/flutter_secure_storage/issues/43
-      await secureStorage.deleteAll();
-
-      // recreate storage key
-      await secureStorage.write(
-          key: 'key', value: base64UrlEncode(Hive.generateSecureKey()));
-      storedEncryptionKey = await secureStorage.read(key: 'key');
-    }
-
     await Hive.openBox('appVersion', path: appVersionDbPath.path);
   }
 
   Future<void> openBox<T>(String key, bool encrypt) async {
     if (compactionStrategy == null) {
-      await Hive.openBox<T>(
-        key,
-        encryptionCipher: encrypt ? HiveAesCipher(encryptionKey) : null,
-      );
+      await Hive.openBox<T>(key);
     } else {
-      await Hive.openBox<T>(
-        key,
-        compactionStrategy: compactionStrategy!,
-        encryptionCipher: encrypt ? HiveAesCipher(encryptionKey) : null,
-      );
+      await Hive.openBox<T>(key, compactionStrategy: compactionStrategy!);
     }
   }
 

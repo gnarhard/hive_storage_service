@@ -1,6 +1,6 @@
 name: hive_storage_service
 description: A service for managing storage with Hive.
-version: 1.0.1
+version: 1.0.2
 
 environment:
   sdk: ">=2.18.6 <3.0.0"
@@ -31,4 +31,3 @@ dependencies:
     sdk: flutter
   package_info_plus: ^4.1.0
   path_provider: ^2.0.12
-  flutter_secure_storage: ^8.0.0
