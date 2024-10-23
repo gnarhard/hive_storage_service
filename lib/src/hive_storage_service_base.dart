@@ -69,7 +69,7 @@ class HiveStorageService {
     }
   }
 
-  Future<void> nukeOldVersionDBs() async {
+  Future<bool> nukeOldVersionDBs() async {
     final packageInfo = await PackageInfo.fromPlatform();
     final String currentVersion = packageInfo.buildNumber == ''
         ? packageInfo.version
@@ -86,6 +86,9 @@ class HiveStorageService {
           await Hive.openBox('appVersion', path: appVersionDbPath.path);
 
       appVersionBox.put('appVersion', currentVersion);
+      return true;
     }
+
+    return false;
   }
 }
