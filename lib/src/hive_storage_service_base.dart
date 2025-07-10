@@ -41,6 +41,14 @@ class HiveStorageService {
     }
   }
 
+  Future<void> openLazyBox<T>(String key, bool encrypt) async {
+    if (compactionStrategy == null) {
+      await Hive.openLazyBox<T>(key);
+    } else {
+      await Hive.openLazyBox<T>(key, compactionStrategy: compactionStrategy!);
+    }
+  }
+
   /// Get a value from the cache.
   T? get<T>(String key, {T? defaultValue}) {
     final box = Hive.box(key);
