@@ -27,5 +27,5 @@ dependencies:
   hive: ^2.2.3
   flutter:
     sdk: flutter
-  package_info_plus: ^8.0.0
+  package_info_plus: ^9.0.0
   path_provider: ^2.0.12
