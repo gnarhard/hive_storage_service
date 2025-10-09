@@ -1,6 +1,6 @@
 name: hive_storage_service
 description: A service for managing storage with Hive.
-version: 1.1.0
+version: 1.1.1
 
 environment:
   sdk: ">=3.5.3 < 4.0.0"
