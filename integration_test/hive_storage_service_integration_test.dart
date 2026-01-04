@@ -1,8 +1,9 @@
 import 'dart:io';
 
-import 'package:hive/hive.dart';
+import 'package:hive_ce/hive.dart';
 import 'package:hive_storage_service/hive_storage_service.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive_storage_service/src/hive_adapters.dart';
 import 'package:hive_storage_service/src/mock_hive_model.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:package_info_plus/package_info_plus.dart';
@@ -76,8 +77,10 @@ void main() {
       await service.openBox<int>('test_number', false);
       service.set<int>('test_number', 1);
 
-      final box = await Hive.openBox<String>('buildNumber',
-          path: service.buildNumberDbPath.path);
+      final box = await Hive.openBox<String>(
+        'buildNumber',
+        path: service.buildNumberDbPath.path,
+      );
       box.put('buildNumber', packageInfo.buildNumber);
       final storedVersion = box.get('buildNumber');
 
@@ -89,12 +92,16 @@ void main() {
 
       // expect that db sizes remain the same after versions match
       expect(originalDbStat.size, newDbStat.size);
-      bool boxExists = await Hive.boxExists('buildNumber',
-          path: service.buildNumberDbPath.path);
+      bool boxExists = await Hive.boxExists(
+        'buildNumber',
+        path: service.buildNumberDbPath.path,
+      );
       expect(boxExists, true);
 
-      final newBox = await Hive.openBox<String>('buildNumber',
-          path: service.buildNumberDbPath.path);
+      final newBox = await Hive.openBox<String>(
+        'buildNumber',
+        path: service.buildNumberDbPath.path,
+      );
       newBox.put('buildNumber', 'test_version_change');
       await service.nukeOldVersionDBs();
       newDbStat = await service.hiveDbDirectory.stat();
@@ -103,8 +110,10 @@ void main() {
       expect(originalDbStat.size, isNot(newDbStat.size));
 
       // box should have been recreated
-      boxExists = await Hive.boxExists('buildNumber',
-          path: service.buildNumberDbPath.path);
+      boxExists = await Hive.boxExists(
+        'buildNumber',
+        path: service.buildNumberDbPath.path,
+      );
       expect(boxExists, true);
     });
   });
