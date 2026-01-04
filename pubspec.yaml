@@ -1,6 +1,6 @@
 name: hive_storage_service
 description: A service for managing storage with Hive.
-version: 1.1.1
+version: 1.1.2
 
 environment:
   sdk: ">=3.5.3 < 4.0.0"
@@ -14,13 +14,12 @@ dev_dependencies:
     sdk: flutter
   json_serializable: ^6.6.0
   mockito: ^5.3.2
-  json_annotation: ^4.8.0
+  json_annotation: ^4.9.0
   build_runner: ^2.3.3
   hive_generator: ^2.0.0
   http_cache:
     path: /Users/gerhard/Code/dart_packages/http_cache
-  get_it: ^8.0.0
-  faker: ^2.1.0
+  faker: ^2.2.0
 
 dependencies:
   hive_flutter: ^1.1.0
@@ -28,4 +27,4 @@ dependencies:
   flutter:
     sdk: flutter
   package_info_plus: ^9.0.0
-  path_provider: ^2.0.12
+  path_provider: ^2.1.5

@@ -15,7 +15,7 @@ class HiveStorageService {
   late final Directory hiveDbDirectory;
 
   /// Make this a different directory than hiveDbDirectory to save it from nuking.
-  late final Directory appVersionDbPath;
+  late final Directory buildNumberDbPath;
 
   HiveStorageService(
       {this.hiveSubDirectoryName = 'hive',
@@ -26,11 +26,11 @@ class HiveStorageService {
     await Hive.initFlutter(hiveSubDirectoryName);
     hiveDbDirectory = Directory(
         '${(await getApplicationDocumentsDirectory()).path}/$hiveSubDirectoryName');
-    appVersionDbPath = await getApplicationDocumentsDirectory();
+    buildNumberDbPath = await getApplicationDocumentsDirectory();
 
     adapterRegistrationCallback();
 
-    await Hive.openBox('appVersion', path: appVersionDbPath.path);
+    await Hive.openBox<String>('buildNumber', path: buildNumberDbPath.path);
   }
 
   Future<void> openBox<T>(String key, bool encrypt) async {
@@ -49,22 +49,28 @@ class HiveStorageService {
     }
   }
 
+  Future<void> closeBox<T>(String key) async {
+    final box = Hive.box<T>(key);
+    await box.close();
+  }
+
   /// Get a value from the cache.
   T? get<T>(String key, {T? defaultValue}) {
-    final box = Hive.box(key);
+    // check if box is already open
+    final box = Hive.box<T>(key);
     final data = box.get(key, defaultValue: defaultValue);
     return data;
   }
 
   /// Create or update a cache entry.
-  void set(String key, dynamic value) {
-    final box = Hive.box(key);
+  void set<T>(String key, dynamic value) {
+    final box = Hive.box<T>(key);
     box.put(key, value);
   }
 
   /// Delete all items stored under the cache key.
-  void destroy(String key) {
-    final box = Hive.box(key);
+  void destroy<T>(String key) {
+    final box = Hive.box<T>(key);
     box.delete(key);
   }
 
@@ -79,21 +85,21 @@ class HiveStorageService {
 
   Future<bool> nukeOldVersionDBs() async {
     final packageInfo = await PackageInfo.fromPlatform();
-    final String currentVersion = packageInfo.buildNumber == ''
-        ? packageInfo.version
-        : '${packageInfo.version}+${packageInfo.buildNumber}';
 
-    final appVersionBox =
-        await Hive.openBox('appVersion', path: appVersionDbPath.path);
-    final storedVersion = await appVersionBox.get('appVersion');
+    final buildNumberBox =
+        await Hive.openBox<String>('buildNumber', path: buildNumberDbPath.path);
+    final stored = buildNumberBox.get('buildNumber');
 
-    if (storedVersion != currentVersion) {
+    print(
+        'Stored build #: $stored, Current build #: ${packageInfo.buildNumber}');
+
+    if (stored != packageInfo.buildNumber) {
+      print('here');
       await truncate();
 
-      final appVersionBox =
-          await Hive.openBox('appVersion', path: appVersionDbPath.path);
-
-      appVersionBox.put('appVersion', currentVersion);
+      final buildNumberBox = await Hive.openBox<String>('buildNumber',
+          path: buildNumberDbPath.path);
+      buildNumberBox.put('buildNumber', packageInfo.buildNumber);
       return true;
     }
 

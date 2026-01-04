@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:get_it/get_it.dart';
 import 'package:hive/hive.dart';
 import 'package:hive_storage_service/hive_storage_service.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -10,44 +9,43 @@ import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:hive_storage_service/src/empty_app.dart' as app;
 
-// NOTE: Tests passing as of 9.2.2023
+// NOTE: Tests passing as of 1.3.2026
 
 void main() {
   group('Hive Storage Service', () {
     IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-    late final service = GetIt.I<HiveStorageService>();
+    late final HiveStorageService service;
     bool registered = false;
     const String storageKey = 'test';
 
     setUp(() async {
       if (!registered) {
-        GetIt.I
-            .registerLazySingleton<HiveStorageService>(() => HiveStorageService(
-                  adapterRegistrationCallback: () {
-                    Hive.registerAdapter(MockHiveModelAdapter());
-                  },
-                ));
-
+        service = HiveStorageService(
+          adapterRegistrationCallback: () {
+            Hive.registerAdapter(MockHiveModelAdapter());
+          },
+        );
         await service.init();
         registered = true;
       }
 
-      await service.openBox(storageKey, true);
       app.main();
     });
 
     testWidgets("can set data", (tester) async {
       await tester.pumpAndSettle();
 
+      await service.openBox<MockHiveModel>(storageKey, true);
+
       final mockModel = MockHiveModel.make();
-      service.set(storageKey, mockModel);
+      service.set<MockHiveModel>(storageKey, mockModel);
 
       final mockHiveModel = service.get<MockHiveModel>(storageKey);
 
       expect(mockHiveModel, isNotNull);
       expect(mockHiveModel == mockModel, true);
 
-      service.destroy(storageKey);
+      service.destroy<MockHiveModel>(storageKey);
     });
 
     testWidgets("can wipe data", (tester) async {
@@ -56,8 +54,8 @@ void main() {
       expect(dbExists, true);
 
       // store new data
-      await service.openBox('test_number', false);
-      service.set('test_number', 1);
+      await service.openBox<int>('test_number', false);
+      service.set<int>('test_number', 1);
 
       await service.truncate();
       dbExists = await service.hiveDbDirectory.exists();
@@ -73,33 +71,41 @@ void main() {
       await tester.pumpAndSettle();
 
       final packageInfo = await PackageInfo.fromPlatform();
-      final String currentVersion = packageInfo.buildNumber == ''
-          ? packageInfo.version
-          : '${packageInfo.version}+${packageInfo.buildNumber}';
 
-      await service.openBox('appVersion', false);
-      service.set('appVersion', currentVersion);
-      final storedVersion = service.get<String>('appVersion');
+      // add data to hiveDbDirectory so the size can be compared later
+      await service.openBox<int>('test_number', false);
+      service.set<int>('test_number', 1);
 
-      expect(storedVersion, currentVersion);
+      final box = await Hive.openBox<String>('buildNumber',
+          path: service.buildNumberDbPath.path);
+      box.put('buildNumber', packageInfo.buildNumber);
+      final storedVersion = box.get('buildNumber');
 
-      FileStat dbStat = await service.hiveDbDirectory.stat();
+      expect(storedVersion, packageInfo.buildNumber);
+
+      FileStat originalDbStat = await service.hiveDbDirectory.stat();
       await service.nukeOldVersionDBs();
       FileStat newDbStat = await service.hiveDbDirectory.stat();
 
-      // expect that db sizes exists after versions match
-      expect(dbStat.size == newDbStat.size, true);
-      bool boxExists = await Hive.boxExists('appVersion');
+      // expect that db sizes remain the same after versions match
+      expect(originalDbStat.size, newDbStat.size);
+      bool boxExists = await Hive.boxExists('buildNumber',
+          path: service.buildNumberDbPath.path);
       expect(boxExists, true);
 
-      await service.openBox('appVersion', false);
-      service.set('appVersion', '1.0.0+99');
+      final newBox = await Hive.openBox<String>('buildNumber',
+          path: service.buildNumberDbPath.path);
+      newBox.put('buildNumber', 'test_version_change');
       await service.nukeOldVersionDBs();
       newDbStat = await service.hiveDbDirectory.stat();
 
       // expect that db was truncated after versions don't match
-      boxExists = await Hive.boxExists('appVersion');
-      expect(boxExists, false);
+      expect(originalDbStat.size, isNot(newDbStat.size));
+
+      // box should have been recreated
+      boxExists = await Hive.boxExists('buildNumber',
+          path: service.buildNumberDbPath.path);
+      expect(boxExists, true);
     });
   });
 }
