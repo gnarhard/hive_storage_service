@@ -63,7 +63,7 @@ class HiveStorageService {
   }
 
   /// Create or update a cache entry.
-  void set<T>(String key, dynamic value) {
+  void set<T>(String key, T value) {
     final box = Hive.box<T>(key);
     box.put(key, value);
   }
@@ -94,7 +94,6 @@ class HiveStorageService {
         'Stored build #: $stored, Current build #: ${packageInfo.buildNumber}');
 
     if (stored != packageInfo.buildNumber) {
-      print('here');
       await truncate();
 
       final buildNumberBox = await Hive.openBox<String>('buildNumber',
